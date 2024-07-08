@@ -185,11 +185,26 @@ def update_field_by_name(name):
         
         cursor = get_cursor()
         if cursor:
+            # Update the specified field
             sql_update = "UPDATE datawatch SET value = %s WHERE field = %s"
             cursor.execute(sql_update, (data['value'], name))
             db_connection.commit()
+
+            # Check if the updated field ends with '_status' or '_state'
+            if name.endswith('_status'):
+                # Update corresponding timestamp field
+                timestamp_name = f"{name.split('_status')[0]}_timestamp"
+                current_time = datetime.now().strftime("%Y/%m/%d-%H/%M/%S")
+                cursor.execute(sql_update, (current_time, timestamp_name))
+                db_connection.commit()
+            elif name.endswith('_state'):
+                # Update corresponding timestamp field
+                timestamp_name = f"{name.split('_state')[0]}_last"
+                current_time = datetime.now().strftime("%Y/%m/%d-%H/%M/%S")
+                cursor.execute(sql_update, (current_time, timestamp_name))
+                db_connection.commit()
+
             cursor.close()
-            
             return jsonify({"message": "Field updated successfully"}), 200
         else:
             return jsonify({"error": "Database connection not available"}), 500
@@ -225,8 +240,22 @@ def get_fieldvalue_by_name(name):
             sql_select = "SELECT value FROM datawatch WHERE field = %s"
             cursor.execute(sql_select, (name,))
             field_value = cursor.fetchone()
-            
+
             if field_value:
+                # Update corresponding _timestamp or _last field
+                if name.endswith('_status'):
+                    timestamp_name = f"{name.split('_status')[0]}_timestamp"
+                elif name.endswith('_state'):
+                    timestamp_name = f"{name.split('_state')[0]}_last"
+                else:
+                    timestamp_name = None
+
+                if timestamp_name:
+                    current_time = datetime.now().strftime("%Y/%m/%d-%H/%M/%S")
+                    sql_update = "UPDATE datawatch SET value = %s WHERE field = %s"
+                    cursor.execute(sql_update, (current_time, timestamp_name))
+                    db_connection.commit()
+
                 return jsonify({"value": field_value[0]})
             else:
                 return jsonify({"error": "Field not found"}), 404
