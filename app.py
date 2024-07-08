@@ -233,7 +233,7 @@ def delete_field_by_name(name):
 def get_fieldvalue_by_name(name):
     try:
         if not is_mysql_available():
-            return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
+            return "MySQL database not responding, please check the database service", 500
         
         cursor = get_cursor()
         if cursor:
@@ -256,13 +256,14 @@ def get_fieldvalue_by_name(name):
                     cursor.execute(sql_update, (current_time, timestamp_name))
                     db_connection.commit()
 
-                return jsonify field_value[0]
+                return str(field_value[0])  # Return value as string
             else:
-                return jsonify({"error": "Field not found"}), 404
+                return "Field not found", 404
         else:
-            return jsonify({"error": "Database connection not available"}), 500
+            return "Database connection not available", 500
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
+
 
 @app.route('/', methods=['GET'])
 def index():
