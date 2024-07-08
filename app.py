@@ -256,7 +256,7 @@ def get_fieldvalue_by_name(name):
                     cursor.execute(sql_update, (current_time, timestamp_name))
                     db_connection.commit()
 
-                return jsonify({"value": field_value[0]})
+                return jsonify field_value[0]
             else:
                 return jsonify({"error": "Field not found"}), 404
         else:
